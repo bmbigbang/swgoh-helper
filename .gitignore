@@ -1,1 +1,7 @@
 /venv/
+
+.idea
+
+env.json
+saved-data.json
+
