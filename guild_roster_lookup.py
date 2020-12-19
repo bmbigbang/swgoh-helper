@@ -6,7 +6,7 @@ from env import get_env
 
 env_data = get_env()
 # Change the settings below
-creds = settings(env_data.username, env_data.password)
+creds = settings(env_data["username"], env_data["password"])
 client = api_swgoh_help(creds)
 
 # should be any player's allycode in the guild

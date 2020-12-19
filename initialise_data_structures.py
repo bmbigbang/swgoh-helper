@@ -5,7 +5,7 @@ from env import get_env
 
 
 def initialise_data_structures(force_reload=False):
-    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {} }
+    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {}, "modSets": {} }
     if not force_reload and os.path.isfile('saved-data.json'):
         with open('saved-data.json', 'r', encoding='utf-8') as f:
             saved_data = json.load(f)
@@ -14,7 +14,7 @@ def initialise_data_structures(force_reload=False):
 
     env_data = get_env()
     # Change the settings below
-    creds = settings(env_data.username, env_data.password)
+    creds = settings(env_data["username"], env_data["password"])
     client = api_swgoh_help(creds)
 
     # Build local list of obtainable characters
@@ -84,6 +84,18 @@ def initialise_data_structures(force_reload=False):
     for gear in items:
         saved_data["gear"][gear['id']] = gear
 
+    payload = {
+        'collection': "statModSetList",
+        'language': "eng_us",
+        'enums': True,
+    }
+    mod_stat_list = client.fetchData(payload)
+    saved_data["modSets"] = {i["id"]: i for i in mod_stat_list}
+
     with open('saved-data.json', 'w', encoding='utf-8') as f:
         json.dump(saved_data, f, ensure_ascii=False, indent=4)
     return saved_data
+
+
+# run with force reload to update cache of stored data
+# initialise_data_structures(force_reload=True)

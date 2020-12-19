@@ -11,7 +11,7 @@ data_lookups = initialise_data_structures()
 
 env_data = get_env()
 # Change the settings below
-creds = settings(env_data.username, env_data.password)
+creds = settings(env_data["username"], env_data["password"])
 client = api_swgoh_help(creds)
 
 # should be any player's allycode in the guild
@@ -31,9 +31,9 @@ payload = {
     'language': "eng_us",
     'enums': True,
     'match': {
-    "rarity": 7,
-    "obtainable": True,
-    "obtainableTime": 0
+        "rarity": 7,
+        "obtainable": True,
+        "obtainableTime": 0
     }
 }
 units = client.fetchData(payload)
