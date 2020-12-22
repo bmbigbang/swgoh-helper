@@ -113,7 +113,7 @@ def get_mods(allycode=0, force_reload=False):
 
     # save data
     saved_mods[allycode] = { "mods": mods, "stats": stats }
-    with open('saved-data.json', 'w', encoding='utf-8') as f:
+    with open('saved-mods.json', 'w', encoding='utf-8') as f:
         json.dump(saved_mods, f, ensure_ascii=False, indent=4)
     return saved_mods[allycode]
 

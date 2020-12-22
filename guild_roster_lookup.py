@@ -10,7 +10,7 @@ creds = settings(env_data["username"], env_data["password"])
 client = api_swgoh_help(creds)
 
 # should be any player's allycode in the guild
-allycodes = [env_data.allycode]
+allycodes = [env_data["allycode"]]
 guild_response = client.fetchGuilds(allycodes)
 
 guild_allycodes = [i["allyCode"] for i in guild_response[0]["roster"]]

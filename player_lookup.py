@@ -14,7 +14,7 @@ env_data = get_env()
 creds = settings(env_data["username"], env_data["password"])
 client = api_swgoh_help(creds)
 
-# should be any player's allycode in the guild
+# should be any player's allycode
 allycodes = [694845774]
 players_response = client.fetchPlayers(allycodes)
 
