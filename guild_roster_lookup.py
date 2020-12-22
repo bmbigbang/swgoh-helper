@@ -40,9 +40,9 @@ for player in players:
                 # "ult": ult
             })
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(GLdict)
+# import pprint
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(GLdict)
 
 table = Texttable()
 table.set_cols_align(["l", "r", "r"])
