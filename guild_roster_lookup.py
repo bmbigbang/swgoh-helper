@@ -24,7 +24,8 @@ GLdict = {
     "Sith Eternal Emperor": [],
     "Jedi Master Luke Skywalker": [],
     "Wat Tambor": [],
-    "Darth Vader": []
+    "Darth Vader": [],
+    "Threepio & Chewie": [],
 }
 
 for player in players:

@@ -5,7 +5,7 @@ from env import get_env
 
 
 def initialise_data_structures(force_reload=False):
-    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {}, "modSets": {} }
+    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {}, "modSets": {}, "units": {} }
     if not force_reload and os.path.isfile('saved-data.json'):
         with open('saved-data.json', 'r', encoding='utf-8') as f:
             saved_data = json.load(f)
@@ -18,14 +18,10 @@ def initialise_data_structures(force_reload=False):
     client = api_swgoh_help(creds)
 
     # Build local list of obtainable characters
-    payload = {}
-    payload['collection'] = "unitsList"
-    payload['language'] = "eng_us"
-    payload['enums'] = True
-    payload['match'] = {
-        "rarity": 7,
-        "obtainable": True,
-        "obtainableTime": 0
+    payload = {
+        "collection": "unitsList",
+        "language": "eng_us",
+        "enums": True,
     }
     # payload['project'] = {
     #     "baseId": 1,
@@ -38,7 +34,9 @@ def initialise_data_structures(force_reload=False):
     units = client.fetchData(payload)
 
     for unit in units:
-        saved_data["toons"][unit['baseId']] = unit
+        if unit["obtainable"]:
+            saved_data["toons"][unit['baseId']] = unit
+        saved_data["units"][unit["id"]] = unit
 
     # Build local skills list
     payload = {}
