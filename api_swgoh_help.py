@@ -23,15 +23,17 @@ class api_swgoh_help():
 
         self.urlBase = 'https://api.swgoh.help'
         self.signin = '/auth/signin'
-        self.endpoints = {'guilds': '/swgoh/guilds',
-                          'players': '/swgoh/players',
-                          'roster': '/swgoh/roster',
-                          'data': '/swgoh/data',
-                          'units': '/swgoh/units',
-                          'zetas': '/swgoh/zetas',
-                          'squads': '/swgoh/squads',
-                          'events': '/swgoh/events',
-                          'battles': '/swgoh/battles'}
+        self.endpoints = {
+            'guilds': '/swgoh/guilds',
+            'players': '/swgoh/players',
+            'roster': '/swgoh/roster',
+            'data': '/swgoh/data',
+            'units': '/swgoh/units',
+            'zetas': '/swgoh/zetas',
+            'squads': '/swgoh/squads',
+            'events': '/swgoh/events',
+            'battles': '/swgoh/battles'
+        }
 
         if settings.charStatsApi:
             self.charStatsApi = settings.charStatsApi
@@ -71,6 +73,8 @@ class api_swgoh_help():
         head = {'Content-Type': 'application/json', 'Authorization': self.token['Authorization']}
         data_url = self.urlBase + url
         try:
+            # print request url and payload for diagnostics
+            print(data_url, dumps(payload))
             r = requests.request('POST', data_url, headers=head, data=dumps(payload))
             if r.status_code != 200:
                 error = 'Cannot fetch data - error code'
@@ -179,16 +183,16 @@ class api_swgoh_help():
         except Exception as e:
             return str(e)
 
-    def fetchRoster(self, payload):
+    def fetchRoster(self, payload, enums=True):
         if type(payload) == list:
             p = {}
             p['allycodes'] = payload
-            p['enums'] = True
+            p['enums'] = enums
             payload = p
         elif type(payload) == int:
             p = {}
             p['allycodes'] = [payload]
-            p['enums'] = True
+            p['enums'] = enums
             payload = p
         elif type(payload) != dict:
             return({'message': "Payload ERROR: integer, list of integers, or dict expected.", 'status_code': "000"})

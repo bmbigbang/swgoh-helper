@@ -4,64 +4,15 @@ from api_swgoh_help import api_swgoh_help, settings
 from env import get_env
 from initialise_data_structures import initialise_data_structures
 from texttable import Texttable
+from data_lookups import mod_set_stats, mod_slots, unit_stat_enum
 
-mod_set_stats = {
-    1: {
-        "name": "Health",
-        "setCount": 2,
-        "stat": ["UNITSTATMAXHEALTHPERCENTADDITIVE", 10]
-    },
-    2: {
-        "name": "Offence",
-        "setCount": 4,
-        "stat": ["UNITSTATOFFENSEPERCENTADDITIVE", 15]
-    },
-    3: {
-        "name": "Defense",
-        "setCount": 2,
-        "stat": ["UNITSTATDEFENSEPERCENTADDITIVE", 25]
-    },
-    4: {
-        "name": "Speed",
-        "setCount": 4,
-        "stat": ["UNITSTATSPEEDPERCENTADDITIVE", 10]
-    },
-    5: {
-        "name": "Crit Chance",
-        "setCount": 2,
-        "stat": ["UNITSTATCRITICALCHANCEPERCENTADDITIVE", 8]
-    },
-    6: {
-        "name": "Crit Damage",
-        "setCount": 4,
-        "stat": ["UNITSTATCRITICALDAMAGE", 30]
-    },
-    7: {
-        "name": "Potency",
-        "setCount": 2,
-        "stat": ["UNITSTATACCURACY", 15]
-    },
-    8: {
-        "name": "Tenacity",
-        "setCount": 2,
-        "stat": ["UNITSTATRESISTANCE", 20]
-    },
-}
-
-mod_slots = {
-    0: "Square",
-    1: "Arrow",
-    2: "Diamond",
-    3: "Triangle",
-    4: "Circle",
-    5: "Cross"
-}
 
 def add_stat(stats, stat_name, value, upgrade_tier):
     if stat_name in stats:
         stats[stat_name].append([value, upgrade_tier])
     else:
         stats[stat_name] = [[value, upgrade_tier]]
+
 
 def get_mods(allycode=0, force_reload=False):
     data_lookups = initialise_data_structures()
@@ -71,7 +22,7 @@ def get_mods(allycode=0, force_reload=False):
 
     saved_mods = {}
     if not force_reload and os.path.isfile('saved-mods.json'):
-        with open('saved-data.json', 'r', encoding='utf-8') as f:
+        with open('saved-mods.json', 'r', encoding='utf-8') as f:
             saved_mods = json.load(f)
         if allycode in saved_mods:
             return saved_mods[allycode]
@@ -80,7 +31,7 @@ def get_mods(allycode=0, force_reload=False):
     creds = settings(env_data["username"], env_data["password"])
     client = api_swgoh_help(creds)
 
-    players_response = client.fetchRoster([allycode])
+    players_response = client.fetchRoster([allycode], enums=False)
 
     units_without_mods = {}
     units_upgradable_mods = {}
@@ -92,7 +43,7 @@ def get_mods(allycode=0, force_reload=False):
             mod = unit["mods"][x]
             mod_slot = mod_slots[x]
             if "id" not in mod:
-                if unit["type"] == "CHARACTER" and unit["level"] > 50:
+                if unit["type"] == 1 and unit["level"] > 50:
                     unit_without_mod = units_without_mods.get(unit_id, [])
                     unit_without_mod.append(mod_slot)
                     units_without_mods[unit_id] = unit_without_mod
@@ -112,12 +63,12 @@ def get_mods(allycode=0, force_reload=False):
                         upgradable_mods = units_upgradable_mods.get(unit_id, [])
                         upgradable_mods.append(mod_slot)
                         units_upgradable_mods[unit_id] = upgradable_mods
-                        name = "NOSTAT-{0}".format(mod_slot)
+                        name = unit_stat_enum[0]
                         mod_stats[name] = 0
-                        add_stat(stats, name, 0, 0)
                     else:
-                        mod_stats[mod["stat"][i][0]] = mod["stat"][i][1]
-                        add_stat(stats, *mod["stat"][i])
+                        name = unit_stat_enum[mod["stat"][i][0]]
+                        mod_stats[name] = mod["stat"][i][1]
+                        add_stat(stats, name, mod["stat"][i][1], mod["stat"][i][2])
 
     table = Texttable()
     table.set_cols_align(["l", "l", "l"])
