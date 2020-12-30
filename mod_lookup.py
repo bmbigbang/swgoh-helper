@@ -4,7 +4,7 @@ from api_swgoh_help import api_swgoh_help, settings
 from env import get_env
 from initialise_data_structures import initialise_data_structures
 from texttable import Texttable
-from data_lookups import mod_set_stats, mod_slots, unit_stat_enum
+from data_lookups import mod_set_stats, mod_slots, unit_stats
 
 
 def add_stat(stats, stat_name, value, upgrade_tier):
@@ -15,7 +15,7 @@ def add_stat(stats, stat_name, value, upgrade_tier):
 
 
 def get_mods(allycode=0, force_reload=False):
-    data_lookups = initialise_data_structures()
+    saved_data = initialise_data_structures()
     env_data = get_env()
     if allycode == 0:
         allycode = env_data["allycode"]
@@ -25,6 +25,7 @@ def get_mods(allycode=0, force_reload=False):
         with open('saved-mods.json', 'r', encoding='utf-8') as f:
             saved_mods = json.load(f)
         if allycode in saved_mods:
+            return saved_mods[allycode]
             return saved_mods[allycode]
 
     # Change the settings below
@@ -63,10 +64,10 @@ def get_mods(allycode=0, force_reload=False):
                         upgradable_mods = units_upgradable_mods.get(unit_id, [])
                         upgradable_mods.append(mod_slot)
                         units_upgradable_mods[unit_id] = upgradable_mods
-                        name = unit_stat_enum[0]
+                        name = unit_stats[0]
                         mod_stats[name] = 0
                     else:
-                        name = unit_stat_enum[mod["stat"][i][0]]
+                        name = unit_stats[mod["stat"][i][0]]
                         mod_stats[name] = mod["stat"][i][1]
                         add_stat(stats, name, mod["stat"][i][1], mod["stat"][i][2])
 
@@ -79,7 +80,7 @@ def get_mods(allycode=0, force_reload=False):
     table_units.update(set(units_upgradable_mods.keys()))
     for unit_id in table_units:
         rows.append([
-            data_lookups["toons"][unit_id]["nameKey"],
+            saved_data["toons"][unit_id]["nameKey"],
             ", ".join(units_without_mods.get(unit_id, [])),
             ", ".join(units_upgradable_mods.get(unit_id, []))
         ])

@@ -45,7 +45,11 @@ async function unit_stat_lookup() {
       return
     }
     try {
-      unit_stats[unit.defId] = statCalculator.calcCharStats( unit, { withoutModCalc: true } );
+      unit_stats[unit.defId] = statCalculator.calcCharStats( unit, {
+        withoutModCalc: true,
+        percentVals: true,
+        gameStyle: true
+      } );
     } catch(error) {
       console.log(unit)
       console.error(error)
