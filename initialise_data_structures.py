@@ -5,7 +5,7 @@ from env import get_env
 
 
 def initialise_data_structures(force_reload=False):
-    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {}, "modSets": {}, "units": {} }
+    saved_data = { "toons": {}, "skills": {}, "abilities": {}, "gear": {}, "modSets": {}, "units": {}, "effects": {} }
     if not force_reload and os.path.isfile('saved-data.json'):
         with open('saved-data.json', 'r', encoding='utf-8') as f:
             saved_data = json.load(f)
@@ -55,19 +55,10 @@ def initialise_data_structures(force_reload=False):
 
     # Build local abilities list
     # skills[id]['abilityReference'] -> abilities[id]
-    payload = {}
-    payload['collection'] = "abilityList"
-    payload['language'] = "eng_us"
-    payload['enums'] = True
-    # payload['project'] = {
-    #     "id": 1,
-    #     "type": 1,
-    #     "nameKey": 1
-    # }
-    items = client.fetchData(payload)
+    payload = {'collection': "abilityList", 'language': "eng_us", 'enums': True}
+    abilities = client.fetchData(payload)
 
-    for ability in items:
-        saved_data["abilities"][ability['id']] = ability
+    saved_data["abilities"] = abilities
 
     # Build local gear list
     payload = {}
@@ -89,6 +80,16 @@ def initialise_data_structures(force_reload=False):
     }
     mod_stat_list = client.fetchData(payload)
     saved_data["modSets"] = {i["id"]: i for i in mod_stat_list}
+
+    payload = {
+        "collection": "effectList",
+        "language": "eng_us",
+        "enums": False
+    }
+    effects_response = client.fetchData(payload)
+    saved_data["effects"] = {effect["id"]: effect for effect in effects_response}
+    # looing up modifiers
+    # d = saved_data["effects"]['basicability_glrey_damage_u01']['multiplierAmountDecimal']
 
     with open('saved-data.json', 'w', encoding='utf-8') as f:
         json.dump(saved_data, f, ensure_ascii=False, indent=4)
