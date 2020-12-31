@@ -62,12 +62,15 @@ for defId, character in saved_data["toons"].items():
 
                     new_skill = character_skill_modifiers.get(ability['nameKey'], {})
                     new_tier = new_skill.get(c, {})
-                    new_tier[scaled_effect_arr[1]] = [
-                        scaled_effect_arr[0]["multiplierAmountDecimal"] / decimal_scaling_factor,
-                        scaled_effect_arr[0]["additiveAmountDecimal"] / decimal_scaling_factor,
-                        scaled_effect_arr[0]['contextMultiplierDecimal'] / decimal_scaling_factor,
-                        scaled_effect_arr[0]['additiveAmountDecimal'] / decimal_scaling_factor,
-                    ]
+                    new_tier[scaled_effect_arr[1]] = \
+                        scaled_effect_arr[0]["multiplierAmountDecimal"] / decimal_scaling_factor
+                    # using only 'multiplierAmountDecimal' to make the output file more compact
+                    # new_tier[scaled_effect_arr[1]] = [
+                    #     scaled_effect_arr[0]["multiplierAmountDecimal"] / decimal_scaling_factor,
+                    #     scaled_effect_arr[0]["additiveAmountDecimal"] / decimal_scaling_factor,
+                    #     scaled_effect_arr[0]['contextMultiplierDecimal'] / decimal_scaling_factor,
+                    #     scaled_effect_arr[0]['additiveAmountDecimal'] / decimal_scaling_factor,
+                    # ]
                     new_skill[c] = new_tier
                     character_skill_modifiers[ability['nameKey']] = new_skill
 
