@@ -26,7 +26,6 @@ def get_mods(allycode=0, force_reload=False):
             saved_mods = json.load(f)
         if allycode in saved_mods:
             return saved_mods[allycode]
-            return saved_mods[allycode]
 
     # Change the settings below
     creds = settings(env_data["username"], env_data["password"])
@@ -38,8 +37,15 @@ def get_mods(allycode=0, force_reload=False):
     units_upgradable_mods = {}
     stats = {}
     mods = {}
+    chars = {}
     for unit_id, unit_array in players_response[0].items():
         unit = unit_array[0]
+        chars[unit_id] = {
+            "char_name": saved_data["toons"][unit_id]["nameKey"],
+            "starLevel": unit["starLevel"],
+            "level": unit ["level"],
+            "mods": []
+        }
         for x in range(len(unit["mods"])):
             mod = unit["mods"][x]
             mod_slot = mod_slots[x]
@@ -49,11 +55,14 @@ def get_mods(allycode=0, force_reload=False):
                     unit_without_mod.append(mod_slot)
                     units_without_mods[unit_id] = unit_without_mod
                 continue
+            chars[unit_id]["mods"].append(mod["id"])
+
             mod_stats = {}
             mods[mod["id"]] = {
                 "set": mod_set_stats[mod["set"]],
                 "slot": mod_slot,
-                "stats": mod_stats
+                "stats": mod_stats,
+                "char_name": saved_data["toons"][unit_id]["nameKey"]
             }
             for i in range(5):
                 if i > len(mod["stat"]) - 1:
@@ -89,7 +98,7 @@ def get_mods(allycode=0, force_reload=False):
     print(table.draw())
 
     # save data
-    saved_mods[allycode] = {"mods": mods, "stats": stats}
+    saved_mods[allycode] = {"mods": mods, "stats": stats, "chars": chars}
     with open('saved-mods.json', 'w', encoding='utf-8') as f:
         json.dump(saved_mods, f, ensure_ascii=False, indent=4)
     return saved_mods[allycode]

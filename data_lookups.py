@@ -67,42 +67,42 @@ mod_set_stats = {
     1: {
         "name": "Health",
         "setCount": 2,
-        "stat": [55, 10]
+        "stat": [unit_stats[55], 10]
     },
     2: {
         "name": "Offence",
         "setCount": 4,
-        "stat": [48, 15]
+        "stat": [unit_stats[48], 15]
     },
     3: {
         "name": "Defense",
         "setCount": 2,
-        "stat": [49, 25]
+        "stat": [unit_stats[49], 25]
     },
     4: {
         "name": "Speed",
         "setCount": 4,
-        "stat": [57, 10]
+        "stat": [unit_stats[57], 10]
     },
     5: {
         "name": "Crit Chance",
         "setCount": 2,
-        "stat": [53, 8]
+        "stat": [unit_stats[53], 8]
     },
     6: {
         "name": "Crit Damage",
         "setCount": 4,
-        "stat": [16, 30]
+        "stat": [unit_stats[16], 30]
     },
     7: {
         "name": "Potency",
         "setCount": 2,
-        "stat": [17, 15]
+        "stat": [unit_stats[17], 15]
     },
     8: {
         "name": "Tenacity",
         "setCount": 2,
-        "stat": [18, 20]
+        "stat": [unit_stats[18], 20]
     },
 }
 
