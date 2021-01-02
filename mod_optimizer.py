@@ -48,6 +48,26 @@ col_to_mod_stat_map = {
     11: ["EvasionNegatePercentAdditive"]
 }
 
+# primary stats have an unfair advantage in this calc, by letting them normalise from 0
+max_mod_values_per_stat = {
+    "Speed": 32,
+    "SpeedPercentAdditive": 0.1,
+    "Offence": 253,
+    "OffensePercentAdditive": 0.085,
+    "CriticalChancePercentAdditive": 0.2,
+    "CriticalDamage": 0.42,
+    "Health": 2696,
+    "MaxHealthPercentAdditive": 0.16,
+    "Defense": 73,
+    "DefensePercentAdditive": 0.2,
+    "MaxShield": 4607,
+    "MaxShieldPercentAdditive": 0.24,
+    "CriticalNegateChancePercentAdditive": 0.35,
+    "Resistance": 0.35,
+    "Accuracy": 0.3,
+    "EvasionNegatePercentAdditive": 0.3,
+}
+
 char_name_map = {j["char_name"]: i for i, j in saved_mods[allycode]["chars"].items()}
 
 
@@ -102,24 +122,26 @@ def find(pred, iterable):
     return None
 
 
-def percent_stats_to_flat_modifiers(stat_name, char_stats):
-    percent_modifier = 0.01
-    if stat_name in ["Speed", "Offence", "Health", "Defense", "MaxShield"]:
-        return 1
-    if stat_name == "OffensePercentAdditive":
-        return char_stats["final"]["6"] * percent_modifier
-    elif stat_name == "MaxHealthPercentAdditive":
-        return char_stats["final"]["1"] * percent_modifier
-    elif stat_name == "DefensePercentAdditive":
-        return (char_stats["base"]["8"] + char_stats["base"]["9"]) * percent_modifier / 2
-    elif stat_name == "MaxShieldPercentAdditive":
-        return char_stats["final"]["28"] * percent_modifier
+def scaled_stat_modifiers(stat_name, char_stats):
+    percent_modifier = max_mod_values_per_stat.get(stat_name + "PercentAdditive", 1)
+    if stat_name == "Offense":
+        return 1 / (char_stats["final"]["6"] * percent_modifier)
+    elif stat_name == "Health":
+        return 1 / (char_stats["final"]["1"] * percent_modifier)
+    elif stat_name == "Defense":
+        return 2 / ((char_stats["base"]["8"] + char_stats["base"]["9"]) * percent_modifier)
+    elif stat_name == "MaxShield":
+        return 1 / (char_stats["final"]["28"] * percent_modifier)
+    elif stat_name == "SpeedPercentAdditive":
+        return 1 / (max_mod_values_per_stat[stat_name] / char_stats["final"]["5"])
+    elif stat_name == "Speed":
+        return 1 / max_mod_values_per_stat[stat_name]
     else:
-        return percent_modifier
+        return 0.01 / max_mod_values_per_stat[stat_name]
 
 
 def restructure_mods(char_name):
-    mods_container = { slot: [] for slot in mod_slots.values()}
+    mods_container = {slot: [] for slot in mod_slots.values()}
     mod_map = {}
     char_stats = unit_stats[char_name_map[char_name]]
     for mod_id, mod in saved_mods[allycode]["mods"].items():
@@ -128,12 +150,11 @@ def restructure_mods(char_name):
             for stat_name in stat_names:
                 value = mod["stats"].get(stat_name, 0)
                 if value:
-                    scaled_value = percent_stats_to_flat_modifiers(stat_name, char_stats)
+                    scaled_value = scaled_stat_modifiers(stat_name, char_stats)
                     mod_vector[col_idx - 1] += scaled_value * value
         nd_array = np.array(mod_vector)
         mods_container[mod["slot"]].append(nd_array)
         mod_map[str(nd_array.data)] = mod_id
-
     return mods_container, mod_map
 
 
