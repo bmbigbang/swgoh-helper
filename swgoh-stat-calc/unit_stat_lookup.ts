@@ -47,9 +47,23 @@ async function unit_stat_lookup() {
     try {
       unit_stats[unit.defId] = statCalculator.calcCharStats( unit, {
         withoutModCalc: true,
-        percentVals: true,
-        gameStyle: true
+        percentVals: false,
+        gameStyle: false
       } );
+    } catch(error) {
+      console.log(unit)
+      console.error(error)
+    }
+
+    try {
+      unit_stats[unit.defId] = {
+        ...unit_stats[unit.defId],
+        ...statCalculator.calcCharStats( unit, {
+          withoutModCalc: true,
+          percentVals: true,
+          gameStyle: true
+        } )
+      };
     } catch(error) {
       console.log(unit)
       console.error(error)
