@@ -6,6 +6,8 @@ from initialise_data_structures import initialise_data_structures
 from texttable import Texttable
 from data_lookups import mod_set_stats, mod_slots, unit_stats
 
+saved_data = initialise_data_structures()
+
 
 def add_stat(stats, stat_name, value, upgrade_tier):
     if stat_name in stats:
@@ -14,8 +16,8 @@ def add_stat(stats, stat_name, value, upgrade_tier):
         stats[stat_name] = [[value, upgrade_tier]]
 
 
-def get_mods(allycode=0, force_reload=False):
-    saved_data = initialise_data_structures()
+def get_mods(allycode=0, force_reload=False, unit_exclusions=None, unit_inclusions=None):
+
     env_data = get_env()
     if allycode == 0:
         allycode = env_data["allycode"]
@@ -40,17 +42,23 @@ def get_mods(allycode=0, force_reload=False):
     chars = {}
     for unit_id, unit_array in players_response[0].items():
         unit = unit_array[0]
+        if unit_exclusions and saved_data["toons"][unit_id]["nameKey"] in unit_exclusions:
+            continue
+        if unit_inclusions and saved_data["toons"][unit_id]["nameKey"] in unit_exclusions not in unit_inclusions:
+            continue
+        if unit["level"] < 50:
+            continue
         chars[unit_id] = {
             "char_name": saved_data["toons"][unit_id]["nameKey"],
             "starLevel": unit["starLevel"],
-            "level": unit ["level"],
+            "level": unit["level"],
             "mods": []
         }
         for x in range(len(unit["mods"])):
             mod = unit["mods"][x]
             mod_slot = mod_slots[x]
             if "id" not in mod:
-                if unit["type"] == 1 and unit["level"] > 50:
+                if unit["type"] == 1:
                     unit_without_mod = units_without_mods.get(unit_id, [])
                     unit_without_mod.append(mod_slot)
                     units_without_mods[unit_id] = unit_without_mod
@@ -104,4 +112,5 @@ def get_mods(allycode=0, force_reload=False):
     return saved_mods[allycode]
 
 # run with force reload to update cache of stored data
-# get_mods(force_reload=True)
+# all_units = [j["nameKey"] for j in saved_data["toons"].values()]
+# get_mods(force_reload=True, unit_exclusions=["Bossk"], unit_inclusions=all_units)
