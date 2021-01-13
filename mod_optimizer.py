@@ -23,7 +23,14 @@ workbook = load_workbook('mod-weights.xlsx')
 char_mod_stat_weights = workbook["Char Mod Stat Weights"]
 
 # this significantly impacts performance
-candidates_to_try_in_each_slot = 8
+candidates_to_try = {
+    "Square": 10,
+    "Arrow": 5,
+    "Diamond": 8,
+    "Triangle": 5,
+    "Circle": 10,
+    "Cross": 5
+}
 
 column_stat_map = {
     1: "Speed",
@@ -53,6 +60,8 @@ col_to_mod_stat_map = {
     11: ["EvasionNegatePercentAdditive"]
 }
 
+zer_set_stats = np.zeros(len(col_to_mod_stat_map.keys()) + 1)
+
 # primary stats have an unfair advantage in this calc, by letting them normalise from 0
 max_mod_values_per_stat = {
     "Speed": 32,
@@ -74,6 +83,8 @@ max_mod_values_per_stat = {
 }
 
 char_name_map = {j["nameKey"]: i for i, j in saved_data["toons"].items()}
+
+mod_set_idx_map = {j["name"]: i - 1for i, j in mod_set_stats.items()}
 
 
 def construct_weights():
@@ -97,7 +108,7 @@ def construct_weights():
                 char_weights.append(0)
                 char_thresholds.append({0: 0})
             elif type(cell) is int:
-                char_weights.append(cell)
+                char_weights.append(float(cell))
                 char_thresholds.append({0: 0})
             elif cell.startswith("("):
                 threshold = threshold_pattern.search(cell)
@@ -164,12 +175,12 @@ def restructure_mods(char_name, mod_map):
                     mod_vector[col_idx - 1] += scaled_value * value
 
         mod_vector.append(count)
-        nd_array = np.array(mod_vector)
-        mods_container[mod["slot"]].append(nd_array)
+        np_array = np.array(mod_vector)
+        mods_container[mod["slot"]].append(np_array)
         mod_map[count] = mod_id
         count += 1
     for slot in mod_slots.values():
-        mods_container["np-" + slot] = np.array(mods_container[slot])
+        mods_container[slot] = np.array(mods_container[slot])
 
     mods_container["sets"] = np.zeros((len(mod_set_stats.keys()), len(col_to_mod_stat_map.keys()) + 1))
     for mod_set_idx, mod_set in mod_set_stats.items():
@@ -180,23 +191,41 @@ def restructure_mods(char_name, mod_map):
     return mods_container
 
 
-def score_and_sort_mods(mods_container, slot, weights):
-    scores_mods = np.inner(mods_container[slot], weights)
-    indices = np.argpartition(scores_mods, -candidates_to_try_in_each_slot)[-candidates_to_try_in_each_slot:]
-    candidates = mods_container["np-" + slot][indices]
+def score_and_sort_mods(mods_container, slot, weights, mod_map, set_names):
+    filtered_mods = mods_container[slot]
+    if slot in ["Arrow", "Triangle", "Cross"]:
+        prioritised_sets = set()
+        for mod_set_idx, mod_set in mod_set_stats.items():
+            matching = len([i for i in set_names if i == mod_set["name"]]) % mod_set["setCount"]
+            if matching and False if mod_set["setCount"] == 4 and slot == "Cross" else True:
+                prioritised_sets.add(mod_set["name"])
+        if len(prioritised_sets):
+            filtered_mods = np.array([i for i in filter(
+                lambda x:
+                    saved_mods[allycode]["mods"][mod_map[x[-1]]]["set"]["name"] in prioritised_sets,
+                mods_container[slot]
+            )])
+            if filtered_mods.shape[0] == 0:
+                filtered_mods = mods_container[slot]
+    idx = min(candidates_to_try[slot], len(filtered_mods))
+    scored_mods = np.inner(filtered_mods, weights)
+    indices = np.argpartition(scored_mods, -idx)[-idx:]
+    candidates = filtered_mods[indices]
     return candidates
 
 
 def evaluate_sets(candidates, mod_map, mod_sets_container):
     sets = [saved_mods[allycode]["mods"][mod_map[i[-1]]]["set"] for i in candidates]
     set_names = [i["name"] for i in sets]
-    set_stats = np.zeros(len(col_to_mod_stat_map.keys()) + 1)
+    active_sets = []
+    set_stats = np.copy(zer_set_stats)
     for mod_set_idx, mod_set in mod_set_stats.items():
         matching = len([i for i in set_names if i == mod_set["name"]]) / mod_set["setCount"]
         matching_sets = np.floor(matching)
         for _ in range(int(matching_sets)):
             set_stats += mod_sets_container[mod_set_idx - 1]
-    return set_stats
+            active_sets.append(mod_set["name"])
+    return set_stats, set_names
 
 
 def evaluate_thresholds(candidates, thresholds, weights, set_stats):
@@ -217,14 +246,15 @@ def evaluate_thresholds(candidates, thresholds, weights, set_stats):
 def recurse_slots(weights, thresholds, candidates, slots, slot_id, mods_container, mod_map, score, char_name):
     slot_id += 1
     slot = slots[slot_id]
-    sorted_mods = score_and_sort_mods(mods_container, slot, weights)
-    set_stats = evaluate_sets(candidates, mod_map, mods_container["sets"])
+
+    set_stats, set_names = evaluate_sets(candidates, mod_map, mods_container["sets"])
     W = evaluate_thresholds(
         candidates,
         thresholds,
         np.copy(weights),
         set_stats
     )
+    sorted_mods = score_and_sort_mods(mods_container, slot, weights, mod_map, set_names)
 
     result_candidates = np.concatenate((candidates, np.array([sorted_mods[0]])))
 
@@ -244,8 +274,7 @@ def recurse_slots(weights, thresholds, candidates, slots, slot_id, mods_containe
                 char_name=char_name
             )
         else:
-        # print([saved_mods[allycode]["mods"][mod_map[str(i.data)]]["set"] for i in new_candidates])
-            set_stats = evaluate_sets(candidates, mod_map, mods_container["sets"])
+            set_stats, set_names = evaluate_sets(candidates, mod_map, mods_container["sets"])
             new_score = np.sum(np.inner(np.concatenate((np.array([set_stats]), candidates)), weights))
 
         if new_score > score:
@@ -261,7 +290,7 @@ def evaluate_mods():
     mod_sets = {}
     used_mods = set()
     mod_map = {}
-    for weight_object in weights[:6]:
+    for weight_object in weights:
         if char_name_map[weight_object["char_name"]] not in saved_mods[allycode]["chars"]:
             recommendations[weight_object["char_name"]] = None
             continue
@@ -269,10 +298,9 @@ def evaluate_mods():
         slots = [i for i in mod_slots.values()]
 
         for slot in slots:
-            ##  np.extract(condition, arr)
-            mods_container[slot] = [i for i in filter(lambda x: x[-1] not in used_mods, mods_container[slot])]
+            mods_container[slot] = np.array([i for i in filter(lambda x: x[-1] not in used_mods, mods_container[slot])])
 
-        square_sorted_mods = score_and_sort_mods(mods_container, "Square", weight_object["weights"])
+        square_sorted_mods = score_and_sort_mods(mods_container, "Square", weight_object["weights"], mod_map, [])
         mod_candidates = np.array([])
         score = np.sum(square_sorted_mods[0] * weight_object["weights"])
 
@@ -320,8 +348,12 @@ def update_excel_with_recommendations():
         worksheet.cell(row=count, column=1).value = char_name
 
         if mod_candidates is None:
-            print(char_name)
             worksheet.cell(row=count, column=2).value = "Character is not lvl 51 or was excluded"
+            count += 1
+            continue
+        elif mod_candidates.shape[0] == 0:
+            worksheet.cell(row=count, column=2).value = "Not Enough mods"
+            count += 1
             continue
 
         recommendation = ""
@@ -331,7 +363,7 @@ def update_excel_with_recommendations():
             recommendation += "{} {} from {}{}".format(mod["set"]["name"], slots[x], mod["char_name"], "\n")
         worksheet.cell(row=count, column=2).value = recommendation
 
-        set_stats = evaluate_sets(mod_candidates, mod_map, mod_sets_container[char_name])
+        set_stats, set_names = evaluate_sets(mod_candidates, mod_map, mod_sets_container[char_name])
         mods_vector = np.sum(mod_candidates, axis=0) + set_stats
 
         for col_idx, stat_names in col_to_mod_stat_map.items():
