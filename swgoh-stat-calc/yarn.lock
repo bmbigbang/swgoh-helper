@@ -25,7 +25,7 @@ es-module-loader@^2.3.0:
   resolved "https://registry.yarnpkg.com/es-module-loader/-/es-module-loader-2.3.0.tgz#e20835fc6ad0bf42e459fb8dd0a17b596e1a0127"
   integrity sha512-iuw5FdVMYA5d7CWCpGL3NcmRD2kWLGTNUds+vdcRuDWjnEsird1K7pSD9PXmvOU/B8sb4by12/9MFZD2hwXdAQ==
 
-node-fetch@^2.1.2, node-fetch@^2.6.1:
+node-fetch@^2.1.2, node-fetch@^2.6.0, node-fetch@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.1.tgz#045bd323631f76ed2e2b55573394416b639a0052"
   integrity sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==
@@ -34,6 +34,14 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
+
+swgoh-stat-calc-data-builder@^2.0.7:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/swgoh-stat-calc-data-builder/-/swgoh-stat-calc-data-builder-2.0.7.tgz#e0bf5f6b8a87c5bc8d29bcc7a09fa6b1b7a32a7e"
+  integrity sha512-oYDhUkk8rOL+8kgJ50Z82ETKyQA/M78CWzjxkqlvfMjRIisOtE6tLVv0Tz7vgfWbmQ+KcTfHIop3HimD8TSqmg==
+  dependencies:
+    api-swgoh-help "^3.3.0"
+    node-fetch "^2.6.0"
 
 swgoh-stat-calc@^1.1.2:
   version "1.1.2"

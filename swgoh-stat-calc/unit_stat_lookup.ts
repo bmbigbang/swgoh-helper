@@ -1,15 +1,16 @@
 const ApiSwgohHelp = require('api-swgoh-help');
 const statCalculator = require('swgoh-stat-calc');
 
+// @ts-ignore
 import gameData from "./gameData.json";
-import ENV from "../env.json";
+import environment from "../env.json";
 import fs from "fs";
 
 statCalculator.setGameData( gameData );
 
 const swapi = new ApiSwgohHelp({
-	"username": ENV.username,
-	"password": ENV.password
+	"username": environment.username,
+	"password": environment.password
 });
 
 async function unit_stat_lookup() {
@@ -17,7 +18,7 @@ async function unit_stat_lookup() {
   let player
   try {
     const response = await swapi.fetchPlayer({
-      allycode: ENV.allycode,
+      allycode: environment.allycode,
       language: "ENG_US",
       project: {
         roster: {
@@ -40,9 +41,12 @@ async function unit_stat_lookup() {
   }
 
   let unit_stats: Record<string, any> = {};
-  player.roster.forEach( (unit: any) => {
+
+  for (let i = 0; i < player.roster.length; i++) {
+    let unit = player.roster[i]
+
     if (unit.combatType != 1) {
-      return
+      continue
     }
     try {
       unit_stats[unit.defId] = statCalculator.calcCharStats( unit, {
@@ -68,10 +72,17 @@ async function unit_stat_lookup() {
       console.log(unit)
       console.error(error)
     }
+  }
+  try {
+    await fs.promises.writeFile(
+      'unit_stat_data.json',
+      JSON.stringify(unit_stats, null, "    ")
+    );
+  } catch (error) {
+    throw error
+  }
 
-  });
-
-  fs.writeFile("unit_stat_data.json", JSON.stringify(unit_stats, null, "    "), "utf-8", (err) => console.error(err))
+  process.exit(0);
 }
 
 unit_stat_lookup()

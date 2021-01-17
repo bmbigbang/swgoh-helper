@@ -1,13 +1,15 @@
 {
   "main": "unit_stat_lookup.js",
   "scripts": {
-    "start": "tsc && node unit_stat_lookup.js"
+    "start": "tsc && node unit_stat_lookup.js",
+    "loadData": "tsc && node dataBuilder.js"
   },
   "dependencies": {
     "api-swgoh-help": "^3.3.0",
     "es-module-loader": "^2.3.0",
     "node-fetch": "^2.6.1",
-    "swgoh-stat-calc": "^1.1.2"
+    "swgoh-stat-calc": "^1.1.2",
+    "swgoh-stat-calc-data-builder": "^2.0.7"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",
