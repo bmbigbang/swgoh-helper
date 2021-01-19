@@ -24,17 +24,17 @@ char_mod_stat_weights = workbook["Char Mod Stat Weights"]
 
 # this significantly impacts performance
 candidates_to_try = {
-    "Square": 10,
-    "Arrow": 5,
-    "Diamond": 8,
-    "Triangle": 5,
-    "Circle": 10,
-    "Cross": 5
+    "Square": 20,
+    "Arrow": 20,
+    "Diamond": 20,
+    "Triangle": 20,
+    "Circle": 20,
+    "Cross": 20
 }
 
 column_stat_map = {
     1: "Speed",
-    2: "Offence",
+    2: "Offense",
     3: "Crit Chance",
     4: "Crit Damage",
     5: "Health",
@@ -48,7 +48,7 @@ column_stat_map = {
 
 col_to_mod_stat_map = {
     1: ["Speed", "SpeedPercentAdditive"],
-    2: ["Offence", "OffensePercentAdditive"],
+    2: ["Offense", "OffensePercentAdditive"],
     3: ["CriticalChancePercentAdditive"],
     4: ["CriticalDamage"],
     5: ["Health", "MaxHealthPercentAdditive"],
@@ -66,7 +66,7 @@ zer_set_stats = np.zeros(len(col_to_mod_stat_map.keys()) + 1)
 max_mod_values_per_stat = {
     "Speed": 32,
     "SpeedPercentAdditive": 0.1,
-    "Offence": 253,
+    "Offense": 253,
     "OffensePercentAdditive": 0.085,
     "CriticalChancePercentAdditive": 0.2,
     "CriticalDamage": 0.42,
@@ -81,8 +81,6 @@ max_mod_values_per_stat = {
     "Accuracy": 0.3,
     "EvasionNegatePercentAdditive": 0.3,
 }
-
-char_name_map = {j["nameKey"]: i for i, j in saved_data["toons"].items()}
 
 mod_set_idx_map = {j["name"]: i - 1for i, j in mod_set_stats.items()}
 
@@ -142,7 +140,8 @@ def find(pred, iterable):
 
 
 def scaled_stat_modifiers(stat_name, char_name):
-    char_stats = unit_stats[char_name_map[char_name]]
+    unit_id = saved_mods[allycode]["char_name_map"][char_name]
+    char_stats = unit_stats[unit_id]
     percent_modifier = max_mod_values_per_stat.get(stat_name + "PercentAdditive", 1)
     if stat_name == "Offense":
         return 1 / (char_stats["final"]["6"] * percent_modifier)
@@ -209,7 +208,7 @@ def score_and_sort_mods(mods_container, slot, weights, mod_map, set_names):
                 filtered_mods = mods_container[slot]
     idx = min(candidates_to_try[slot], len(filtered_mods))
     scored_mods = np.inner(filtered_mods, weights)
-    indices = np.argpartition(scored_mods, -idx)[-idx:]
+    indices = np.argsort(scored_mods)[-idx:][::-1]
     candidates = filtered_mods[indices]
     return candidates
 
@@ -291,7 +290,7 @@ def evaluate_mods():
     used_mods = set()
     mod_map = {}
     for weight_object in weights:
-        if char_name_map[weight_object["char_name"]] not in saved_mods[allycode]["chars"]:
+        if weight_object["char_name"] not in saved_mods[allycode]["char_name_map"]:
             recommendations[weight_object["char_name"]] = None
             continue
         mods_container = restructure_mods(weight_object["char_name"], mod_map)
@@ -335,7 +334,8 @@ def evaluate_mods():
 
 def update_excel_with_recommendations():
     slots = [i for i in mod_slots.values()]
-    del workbook["Recommendations"]
+    if "Recommendations" in workbook.sheetnames:
+        del workbook["Recommendations"]
     worksheet = workbook.create_sheet("Recommendations")
     worksheet.cell(row=1, column=1).value = "Characters (Sorted By Priority)"
     worksheet.cell(row=1, column=2).value = "Recommendations"
@@ -352,7 +352,7 @@ def update_excel_with_recommendations():
             count += 1
             continue
         elif mod_candidates.shape[0] == 0:
-            worksheet.cell(row=count, column=2).value = "Not Enough mods"
+            worksheet.cell(row=count, column=2).value = "Ran out of mods"
             count += 1
             continue
 
@@ -397,4 +397,4 @@ def update_excel_with_recommendations():
     workbook.save('mod-weights.xlsx')
 
 
-update_excel_with_recommendations()
+## update_excel_with_recommendations()

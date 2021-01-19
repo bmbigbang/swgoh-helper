@@ -4,7 +4,7 @@ from api_swgoh_help import api_swgoh_help, settings
 from env import get_env
 from initialise_data_structures import initialise_data_structures
 from texttable import Texttable
-from data_lookups import mod_set_stats, mod_slots, unit_stats
+from data_lookups import mod_set_stats, mod_slots, unit_stats, primary_stat_names_map
 
 saved_data = initialise_data_structures()
 
@@ -40,6 +40,7 @@ def get_mods(allycode=0, force_reload=False, unit_exclusions=None, unit_inclusio
     stats = {}
     mods = {}
     chars = {}
+    char_name_map = {}
     for unit_id, unit_array in players_response[0].items():
         unit = unit_array[0]
         if unit_exclusions and saved_data["toons"][unit_id]["nameKey"] in unit_exclusions:
@@ -54,6 +55,8 @@ def get_mods(allycode=0, force_reload=False, unit_exclusions=None, unit_inclusio
             "level": unit["level"],
             "mods": []
         }
+        char_name_map[saved_data["toons"][unit_id]["nameKey"]] = unit_id
+
         for x in range(len(unit["mods"])):
             mod = unit["mods"][x]
             mod_slot = mod_slots[x]
@@ -70,6 +73,7 @@ def get_mods(allycode=0, force_reload=False, unit_exclusions=None, unit_inclusio
                 "set": mod_set_stats[mod["set"]],
                 "slot": mod_slot,
                 "stats": mod_stats,
+                "primary": primary_stat_names_map[mod["stat"][0][0]],
                 "char_name": saved_data["toons"][unit_id]["nameKey"]
             }
             for i in range(5):
@@ -106,11 +110,12 @@ def get_mods(allycode=0, force_reload=False, unit_exclusions=None, unit_inclusio
     print(table.draw())
 
     # save data
-    saved_mods[allycode] = {"mods": mods, "stats": stats, "chars": chars}
+    saved_mods[allycode] = {"mods": mods, "stats": stats, "chars": chars, "char_name_map": char_name_map}
     with open('saved-mods.json', 'w', encoding='utf-8') as f:
         json.dump(saved_mods, f, ensure_ascii=False, indent=4)
     return saved_mods[allycode]
 
 # run with force reload to update cache of stored data
-# all_units = [j["nameKey"] for j in saved_data["toons"].values()]
-# get_mods(force_reload=True, unit_exclusions=["Bossk"], unit_inclusions=all_units)
+all_units = [j["nameKey"] for j in saved_data["toons"].values()]
+exclusions = []
+get_mods(force_reload=True, unit_exclusions=exclusions, unit_inclusions=all_units)

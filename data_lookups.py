@@ -70,7 +70,7 @@ mod_set_stats = {
         "stat": [unit_stats[55], 10]
     },
     2: {
-        "name": "Offence",
+        "name": "Offense",
         "setCount": 4,
         "stat": [unit_stats[48], 15]
     },
@@ -113,4 +113,18 @@ mod_slots = {
     3: "Triangle",
     4: "Circle",
     5: "Cross"
+}
+
+primary_stat_names_map = {
+    48: 'Offense',
+    5: 'Speed',
+    49: 'Defense',
+    56: 'Protection',
+    17: 'Potency',
+    55: 'Health',
+    53: 'Crit Chance',
+    18: 'Tenacity',
+    16: 'Crit Damage',
+    54: 'Crit Avoidance',
+    52: 'Accuracy'
 }
